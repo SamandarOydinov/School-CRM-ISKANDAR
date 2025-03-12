@@ -1,0 +1,454 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//pupil
+
+model Admin {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  email              String   @unique
+  phone              String
+  hashedPassword     String
+  hashedRefreshToken String   @default("")
+  role               String[]
+  is_active          Boolean  @default(false)
+  is_creator         Boolean  @default(false)
+  hired_at           DateTime @default(now())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("admins")
+}
+
+model Director {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  email              String   @unique
+  phone              String
+  hashedPassword     String
+  hashedRefreshToken String   @default("")
+  role               String[]
+  is_active          Boolean  @default(false)
+  hired_at           DateTime @default(now())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("directors")
+}
+
+model Role {
+  id        Int        @id @default(autoincrement())
+  name      String
+  roles     UserRole[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("roles")
+}
+
+model UserRole {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Role      Role?    @relation(fields: [roleId], references: [id])
+  roleId    Int?
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
+
+  @@map("userRoles")
+}
+
+model User {
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  email               String                @unique
+  hashedPassword      String
+  hashedRefreshToken  String                @default("")
+  phone               String
+  activation_link     String                @unique @default("")
+  role                String[]              @default(["USER"])
+  rating              Float                 @default(0)
+  is_active           Boolean               @default(false)
+  hired_at            DateTime              @default(now())
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  Class               Class?                @relation(fields: [classId], references: [id])
+  classId             Int?
+  roles               UserRole[]
+  pupilParents        PupilParent[]
+  lessons             Lesson[]
+  userImage           UserImage[]
+  homeWorkSubmissions HomeWorkSubmissions[]
+  School              School?               @relation(fields: [schoolId], references: [id])
+  schoolId            Int?
+  attendance          Attendance[]
+  examResult          ExamResult[]
+  teacherFan          TeacherFan[]
+  messages            Messages[]
+  announcements       Announcement[]
+  chatGroupMembers    ChatGroupMembers[]
+
+  @@map("users")
+}
+
+model Class {
+  id              Int         @id @default(autoincrement())
+  name            String      @unique
+  lessonStartDate DateTime
+  lessonEndDate   DateTime
+  room            Int
+  roomFloor       Int
+  is_active       Boolean     @default(false)
+  totalPupil      Int
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  Course          Course?     @relation(fields: [courseId], references: [id])
+  courseId        Int?
+  pupils          User[]
+  lessons         Lesson[]
+  chatgroup       ChatGroup[]
+  messages        Messages[]
+
+  @@map("classes")
+}
+
+model Course {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  description  String
+  capacity     Int
+  duration     BigInt
+  lesson_quant BigInt
+  classs       Class[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  School       School?  @relation(fields: [schoolId], references: [id])
+  schoolId     Int?
+
+  @@map("courses")
+}
+
+model School {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique
+  number     Int
+  courses    Course[]
+  directors  User[]
+  location   Json
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  District   District? @relation(fields: [districtId], references: [id])
+  districtId Int?
+
+  @@map("schools")
+}
+
+model District {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Region    Region?  @relation(fields: [regionId], references: [id])
+  regionId  Int?
+  schools   School[]
+
+  @@map("districts")
+}
+
+model Region {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  districts District[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("regions")
+}
+
+model Parent {
+  id                 Int           @id @default(autoincrement())
+  name               String
+  email              String        @unique
+  hashedPassword     String
+  hashedRefreshToken String        @default("")
+  phone              String
+  pupilParents       PupilParent[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@map("parents")
+}
+
+model PupilParent {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Parent    Parent?  @relation(fields: [parentId], references: [id])
+  parentId  Int?
+  Pupil     User?    @relation(fields: [pupilId], references: [id])
+  pupilId   Int?
+
+  @@map("pupilParents")
+}
+
+// Admin
+// User
+// Class
+// Course
+// School
+// District
+// Region
+// Parent
+// PupilParent
+
+model Lesson {
+  id              Int               @id @default(autoincrement())
+  title           String            @unique
+  is_exam         Boolean
+  starts          DateTime
+  finishes        DateTime
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  Class           Class?            @relation(fields: [groupId], references: [id])
+  groupId         Int?
+  Teacher         User?             @relation(fields: [teacherId], references: [id])
+  teacherId       Int?
+  lessonMaterials LessonMaterials[]
+  timeTable       TimeTable[]
+  homeWork        HomeWork[]
+  attendance      Attendance[]
+  examResult      ExamResult[]
+  Science         Science?          @relation(fields: [scienceId], references: [id])
+  scienceId       Int?
+
+  @@map("lessons")
+}
+
+model Science {
+  id         Int          @id @default(autoincrement())
+  name       String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  lesson     Lesson[]
+  examResult ExamResult[]
+  teacherFan TeacherFan[]
+
+  @@map("sciences")
+}
+
+model File {
+  id                     Int                      @id @default(autoincrement())
+  name                   String
+  url                    String
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  userImage              UserImage[]
+  lessonMaterials        LessonMaterials[]
+  homeWorkFile           HomeWorkFile[]
+  homeWorkSubmissionFile HomeWorkSubmissionFile[]
+
+  @@map("files")
+}
+
+model LessonMaterials {
+  id          Int      @id @default(autoincrement())
+  topic_name  String
+  type        String
+  file_name   String
+  uploaded_at DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  File        File?    @relation(fields: [fileId], references: [id])
+  fileId      Int?
+  Lesson      Lesson?  @relation(fields: [lessonId], references: [id])
+  lessonId    Int?
+
+  @@map("lessonMaterials")
+}
+
+model UserImage {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  File      File?    @relation(fields: [fileId], references: [id])
+  fileId    Int?
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
+
+  @@map("userImages")
+}
+
+model HomeWork {
+  id                  Int                   @id @default(autoincrement())
+  start_date          DateTime
+  end_date            DateTime
+  description         String
+  homeWorkFile        HomeWorkFile[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  homeWorkSubmissions HomeWorkSubmissions[]
+  Lesson              Lesson?               @relation(fields: [lessonId], references: [id])
+  lessonId            Int?
+
+  @@map("homeWorks")
+}
+
+model HomeWorkFile {
+  id         Int       @id @default(autoincrement())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  HomeWork   HomeWork? @relation(fields: [homeWorkId], references: [id])
+  homeWorkId Int?
+  File       File?     @relation(fields: [fileId], references: [id])
+  fileId     Int?
+
+  @@map("homeWorkFiles")
+}
+
+model TimeTable {
+  id           Int      @id @default(autoincrement())
+  day          String
+  which_period Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  Lesson       Lesson?  @relation(fields: [lessonId], references: [id])
+  lessonId     Int?
+
+  @@map("timeTables")
+}
+
+model HomeWorkSubmissions {
+  id                     Int                      @id @default(autoincrement())
+  status                 String
+  score                  Float
+  description            String
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  HomeWork               HomeWork?                @relation(fields: [homeWorkId], references: [id])
+  homeWorkId             Int?
+  homeWorkSubmissionFile HomeWorkSubmissionFile[]
+  User                   User?                    @relation(fields: [pupilId], references: [id])
+  pupilId                Int?
+
+  @@map("homeWorkSubmissions")
+}
+
+model HomeWorkSubmissionFile {
+  id                    Int                  @id @default(autoincrement())
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  HomeWorkSubmissions   HomeWorkSubmissions? @relation(fields: [homeWorkSubmissionsId], references: [id])
+  homeWorkSubmissionsId Int?
+  File                  File?                @relation(fields: [fileId], references: [id])
+  fileId                Int?
+
+  @@map("homeWorkSubmissionFiles")
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Lesson    Lesson?  @relation(fields: [lessonId], references: [id])
+  lessonId  Int?
+  User      User?    @relation(fields: [pupilId], references: [id])
+  pupilId   Int?
+
+  @@map("attendances")
+}
+
+model ExamResult {
+  id        Int      @id @default(autoincrement())
+  type      String
+  score     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Science   Science? @relation(fields: [scienceId], references: [id])
+  scienceId Int?
+  Lesson    Lesson?  @relation(fields: [lessonId], references: [id])
+  lessonId  Int?
+  User      User?    @relation(fields: [pupilId], references: [id])
+  pupilId   Int?
+
+  @@map("examResults")
+}
+
+model TeacherFan {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Science   Science? @relation(fields: [scienceId], references: [id])
+  scienceId Int?
+  User      User?    @relation(fields: [teacherId], references: [id])
+  teacherId Int?
+
+  @@map("teacherFans")
+}
+
+model ChatGroup {
+  id               Int                @id @default(autoincrement())
+  name             String
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  Class            Class?             @relation(fields: [classId], references: [id])
+  classId          Int?
+  chatGroupMembers ChatGroupMembers[]
+
+  @@map("chatGroups")
+}
+
+model ChatGroupMembers {
+  id            Int        @id @default(autoincrement())
+  firstJoinedAt DateTime
+  is_active     Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  User          User?      @relation(fields: [userId], references: [id])
+  userId        Int?
+  ChatGroup     ChatGroup? @relation(fields: [chatGroupId], references: [id])
+  chatGroupId   Int?
+
+  @@map("chatGroupMembers")
+}
+
+model Messages {
+  id         Int      @id @default(autoincrement())
+  message    String
+  data       DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  User       User?    @relation(fields: [senderId], references: [id])
+  senderId   Int?
+  Class      Class?   @relation(fields: [groupId], references: [id])
+  groupId    Int?
+  receivedId String
+
+  @@map("messages")
+}
+
+model Announcement {
+  id         Int      @id @default(autoincrement())
+  receivedId String
+  title      String
+  message    String
+  data       DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  User       User?    @relation(fields: [senderId], references: [id])
+  senderId   Int?
+
+  @@map("announcements")
+}
