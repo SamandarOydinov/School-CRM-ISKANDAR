@@ -38,10 +38,13 @@ export class AuthController {
 
   // user sign
 
+  @Post('director-sign-up')
+  async director_sign_up(@Body() createAuthDto: CreateUserDto) {
+    return this.authService.directorSignUp(createAuthDto);
+  }
+
   @Post('user-sign-up')
-  async user_sign_up(
-    @Body() createAuthDto: CreateUserDto,
-  ) {
+  async user_sign_up(@Body() createAuthDto: CreateUserDto) {
     return this.authService.userSignUp(createAuthDto);
   }
 
@@ -53,20 +56,16 @@ export class AuthController {
     return this.authService.userSignIn(signInDto, res);
   }
 
-  @UseGuards(RefreshTokenGuard)
-  @Post('refresh')
+  @Post('user-refresh/:id')
   async userRefresh(
     @GetCurrentUserId() userId: number,
     @GetCurrentUser('refreshToken') refreshToken: string,
     @GetCurrentUser() user: JwtPayloadWithRefreshToken,
-    // @Param("id") id: number,
-    // @CookieGetter("refresh_token") refreshToken: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<ResponseFields> {
     return this.authService.userRefreshToken(userId, refreshToken, res);
   }
 
-  @UseGuards(RefreshTokenGuard)
   @HttpCode(200)
   @Post('user-sign-out')
   user_sign_out(
@@ -91,8 +90,7 @@ export class AuthController {
     return this.authService.adminSignIn(signInDto, res);
   }
 
-  @UseGuards(RefreshTokenGuard)
-  @Post('admin-refresh')
+  @Post('admin-refresh/:id')
   async adminRefresh(
     @GetCurrentUserId() id: number,
     @GetCurrentUser('refreshToken') refreshToken: string,

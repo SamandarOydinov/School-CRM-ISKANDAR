@@ -4,24 +4,24 @@ import {
   ForbiddenException,
   Injectable,
   UnauthorizedException,
-} from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { JwtService } from "@nestjs/jwt";
-import { Observable } from "rxjs";
-import { ROLES_KEY } from "../decorators/roles.decorator";
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { JwtService } from '@nestjs/jwt';
+import { Observable } from 'rxjs';
+import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly reflector: Reflector
+    private readonly reflector: Reflector,
   ) {}
   canActivate(
-    context: ExecutionContext
+    context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const requiredRoles = this.reflector.getAllAndOverride<string[]>(
       ROLES_KEY,
-      [context.getHandler(), context.getClass()]
+      [context.getHandler(), context.getClass()],
     );
     if (!requiredRoles) {
       return true;
@@ -29,17 +29,17 @@ export class RolesGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
     const authHeader = req.headers.authorization;
     // console.log(authHeader);
-    
+
     if (!authHeader) {
       throw new UnauthorizedException({
-        message: "token berilmagan",
+        message: 'token berilmagan',
       });
     }
-    const bearer = authHeader.split(" ")[0];
-    const token = authHeader.split(" ")[1];
-    if (bearer !== "Bearer" || !token) {
+    const bearer = authHeader.split(' ')[0];
+    const token = authHeader.split(' ')[1];
+    if (bearer !== 'Bearer' || !token) {
       throw new UnauthorizedException({
-        message: "Bearer token berilmagan",
+        message: 'Bearer token berilmagan',
       });
     }
 
@@ -49,17 +49,17 @@ export class RolesGuard implements CanActivate {
         secret: process.env.USER_ACCESS_TOKEN_KEY,
       });
     } catch {
-      throw new UnauthorizedException({ message: "Token verification failed" });
+      throw new UnauthorizedException({ message: 'Token verification failed' });
     }
     req.user = user;
-    console.log("req.user: ", user);
+    console.log('req.user: ', user);
     const permission = user.role.some((role: any) => {
-      console.log("required: ", requiredRoles);
+      console.log('required: ', requiredRoles);
       return requiredRoles.includes(role);
     });
     if (!permission) {
       throw new ForbiddenException({
-        message: "Sizga ruxsat etilmagan",
+        message: 'Sizga ruxsat etilmagan',
       });
     }
 

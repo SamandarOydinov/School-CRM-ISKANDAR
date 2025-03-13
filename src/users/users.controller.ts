@@ -14,17 +14,33 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserAuthGuard } from '../guards/user_auth_guard';
 import { UserSelfGuard } from '../guards/user_self_guard';
 import { AdminAuthGuard } from '../guards/admin_auth_guard';
+import { RolesGuard } from '../guards/user_roles_guard';
+import { Roles } from '../decorators/roles.decorator';
+import { AdminRolesGuard } from '../guards/admin_roles_guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
+  @UseGuards(AdminAuthGuard)
+  @UseGuards(AdminRolesGuard)
+  @Roles('ADMIN', 'SUPERADMIN', 'DIRECTOR')
+  @Post("createUser")
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
   @UseGuards(AdminAuthGuard)
+  @UseGuards(AdminRolesGuard)
+  @Roles('ADMIN', 'SUPERADMIN')
+  @Post("/createDirector")
+  createDirector(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.createDirector(createUserDto);
+  }
+
+  @UseGuards(AdminAuthGuard)
+  @UseGuards(AdminRolesGuard)
+  @Roles('ADMIN', 'SUPERADMIN', 'DIRECTOR')
   @Get()
   findAll() {
     return this.usersService.findAll();
@@ -44,15 +60,21 @@ export class UsersController {
     return this.usersService.update(+id, updateUserDto);
   }
 
-  // @UseGuards(UserSelfGuard)
-  // @UseGuards(UserAuthGuard)
+  @UseGuards(AdminAuthGuard)
+  @UseGuards(AdminRolesGuard)
+  @Roles('ADMIN', 'SUPERADMIN', 'DIRECTOR')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }
 
-  @Get("activate/:link")
-  async activateUser(@Param("link") link: string){
-    return this.usersService.activateUser(link)
+  @Get('activate/:link')
+  async activateUser(@Param('link') link: string) {
+    return this.usersService.activateUser(link);
+  }
+
+  @Get('acceptToClass/:link')
+  async acceptToClass(@Param('link') link: string) {
+    return this.usersService.acceptToClass(link);
   }
 }

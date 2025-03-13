@@ -14,7 +14,10 @@ export class LessonMaterialService {
   ) {}
   async create(data: CreateLessonMaterialDto, file: any) {
     const fileName = await this.fileService.saveFile(file);
-    const createdFile = await this.fileService.create({ name: data.file_name, url: fileName });
+    const createdFile = await this.fileService.create({
+      name: data.file_name,
+      url: fileName,
+    });
     const lesson = await this.lessonService.findOneForLessonMaterial(
       data.lessonId,
     );
@@ -25,11 +28,11 @@ export class LessonMaterialService {
           fileId: createdFile.id,
           topic_name: lesson.title,
           uploaded_at: new Date(),
-          lessonId: Number(data.lessonId)
+          lessonId: Number(data.lessonId),
         },
       });
     } else {
-      return `File yuklab bo'lmadi`
+      return `File yuklab bo'lmadi`;
     }
   }
 

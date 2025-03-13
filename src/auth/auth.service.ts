@@ -10,7 +10,7 @@ import { UsersService } from '../users/users.service';
 import { CreateUserDto, UpdateUserDto } from '../users/dto';
 import { Admin, User } from '@prisma/client';
 import { SignInDto } from './dto/signIn-dto';
-import * as bcrypt from 'bcrypt'
+import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import { AdminService } from '../admin/admin.service';
 import { CreateAdminDto } from '../admin/dto/create-admin.dto';
@@ -30,7 +30,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       is_active: user.is_active,
-      role: user.role
+      role: user.role,
     };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -59,15 +59,19 @@ export class AuthService {
     if (candidate) {
       throw new BadRequestException('Bunday foydalanuvchi mavjud');
     }
-    
+
     const newUser = await this.userService.create(createUserDto);
 
     const response = {
       message:
         "Tabriklayman tizimga qo'shildingiz. Akkauntni faollashtirish uchun emailga xat yuborildi",
-      userId: newUser.id,
+      userId: newUser.data!.id,
     };
-    return 1;
+    return {
+      response: response,
+      message:
+        "Hurmatli foydalanuvchi siz muvaffaqiyatli ro'yxardan o'tdingiz,Accountingizni faollashtirish uchun emailingizga xabar yuborildi",
+    };
   }
 
   async userSignIn(signInDto: SignInDto, res: Response) {
@@ -93,7 +97,7 @@ export class AuthService {
     if (!updatedUser) {
       throw new InternalServerErrorException('Tokenni saqlashda xatolik');
     }
-    res.cookie('usre_refresh_token', tokens.refresh_token, {
+    res.cookie('refresh_token', tokens.refresh_token, {
       maxAge: 15 * 24 * 60 * 60 * 1000, // process.env.COOKIE_TIME
       httpOnly: true,
     });
@@ -124,9 +128,12 @@ export class AuthService {
     const tokens = await this.userGetTokens(user.data);
 
     const hashed_refresh_token = await bcrypt.hash(tokens.refresh_token, 7);
-    await this.userService.updateRefreshToken(user.data.id, hashed_refresh_token);
+    await this.userService.updateRefreshToken(
+      user.data.id,
+      hashed_refresh_token,
+    );
 
-    res.cookie('user_refresh_token', tokens.refresh_token, {
+    res.cookie('refresh_token', tokens.refresh_token, {
       maxAge: 15 * 24 * 60 * 60 * 1000, // process.env.COOKIE_TIME
       httpOnly: true,
     });
@@ -137,6 +144,7 @@ export class AuthService {
     };
     return response;
   }
+
 
   async userSignOut(refreshToken: string, res: Response) {
     const userData = await this.jwtService.verify(refreshToken, {
@@ -155,6 +163,31 @@ export class AuthService {
       message: 'User logged out succesfully',
     };
     return response;
+  }
+
+  // for Director
+
+  async directorSignUp(createUserDto: CreateUserDto) {
+    const { email, password } = createUserDto;
+    const candidate = await this.userService.findOneByEmail(
+      createUserDto.email,
+    );
+    if (candidate) {
+      throw new BadRequestException('Bunday foydalanuvchi mavjud');
+    }
+
+    const newUser = await this.userService.createDirector(createUserDto);
+
+    const response = {
+      message:
+        "Tabriklayman tizimga qo'shildingiz. Akkauntni faollashtirish uchun emailga xat yuborildi",
+      userId: newUser.data!.id,
+    };
+    return {
+      response: response,
+      message:
+        "Hurmatli foydalanuvchi siz muvaffaqiyatli ro'yxardan o'tdingiz,Accountingizni faollashtirish uchun emailingizga xabar yuborildi",
+    };
   }
 
   //  for Admin

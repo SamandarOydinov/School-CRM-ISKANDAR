@@ -15,6 +15,10 @@ export class HomeWorkService {
     private readonly classService: ClassService,
   ) {}
   async create(createHomeWorkDto: CreateHomeWorkDto, id: number) {
+    const teacher = await this.usersService.findOne(id);
+    if (!teacher.data.is_active) {
+      throw new BadRequestException('Siz active emassiz');
+    }
     const lesson = await this.lessonService.findOne(createHomeWorkDto.lessonId);
     console.log('lesson: ', lesson);
     if (!lesson) {
@@ -29,7 +33,11 @@ export class HomeWorkService {
     });
   }
 
-  async findAll() {
+  async findAll(id: number) {
+    const teacher = await this.usersService.findOne(id);
+    if (!teacher.data.is_active) {
+      throw new BadRequestException('Siz active emassiz');
+    }
     const homeWorks = await this.prismaService.homeWork.findMany({
       include: { Lesson: { select: { groupId: true } } },
     });
@@ -40,7 +48,7 @@ export class HomeWorkService {
     }
   }
 
-  async findOneByUserId(id: number) {
+  async findManyByUserId(id: number) {
     const user = await this.usersService.findOne(id);
     console.log('user: ', user);
     if (!user.data.classId) {
@@ -57,11 +65,11 @@ export class HomeWorkService {
       throw new BadRequestException({ message: lesson.message });
     }
 
-    console.log("lessons: ", lesson);
+    console.log('lessons: ', lesson);
     const homeWork = await this.prismaService.homeWork.findMany({
       where: { lessonId: lesson.data!.id },
     });
-    return homeWork
+    return homeWork;
 
     // const clas = this.prismaService.homeWork.findMany({where: {}})
   }

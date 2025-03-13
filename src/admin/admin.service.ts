@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { RolesService } from '../roles/roles.service';
 import { CreateRoleDto } from '../roles/dto/create-role.dto';
+import { ClassService } from '../class/class.service';
 
 @Injectable()
 export class AdminService {
@@ -13,6 +14,7 @@ export class AdminService {
     private readonly prismaService: PrismaService,
     private readonly userService: UsersService,
     private readonly roleService: RolesService,
+    private readonly classService: ClassService,
   ) {}
   async create(createAdminDto: CreateAdminDto) {
     const { password, confirm_password, ...data } = createAdminDto;
@@ -61,13 +63,35 @@ export class AdminService {
     const userRole = await this.prismaService.userRole.create({
       data: { userId: userId, roleId: roleId },
     });
-    const updatedUser = await this.userService.update(userId, {
-      role: [`${role?.name}`],
+    let updatedUser: {}
+    if(role.name == "TEACHER"){
+        updatedUser = await this.userService.update(userId, {
+        role: [`${role?.name}`], is_teacher: true
+      });
+    }
+    updatedUser = await this.userService.update(userId, {
+        role: [`${role?.name}`],})
+    return updatedUser;
+  }
+
+  async updateTeacherClass(teacherId: number, classId: number) {
+    const clas = await this.classService.findOne(classId);
+    if (!clas) {
+      return `Bunday clas mavjud emas`;
+    }
+
+    const user = await this.userService.findOne(teacherId);
+    if (!user) {
+      return `Bunday user mavjud emas`;
+    }
+    const updatedUser = await this.userService.update(teacherId, {
+      classId,
     });
     return updatedUser;
   }
 
   async addRole(name: CreateRoleDto) {
+    name = { name: name.name.toUpperCase() };
     const role = await this.roleService.create(name);
     return {
       message: 'add role successfully',

@@ -3,14 +3,20 @@ import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ClassService } from '../class/class.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class LessonService {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly usersService: UsersService,
     private readonly classService: ClassService,
   ) {}
   async create(createLessonDto: CreateLessonDto, id: number) {
+    const teacher = await this.usersService.findOne(id);
+    if (!teacher.data.is_active) {
+      throw new BadRequestException('Siz active emassiz');
+    }
     return this.prismaService.lesson.create({
       data: {
         ...createLessonDto,
@@ -39,7 +45,7 @@ export class LessonService {
 
   async findOne(id: number) {
     const lesson = await this.prismaService.lesson.findUnique({
-      where: { id }
+      where: { id },
     });
     if (lesson) {
       return lesson;
@@ -49,13 +55,14 @@ export class LessonService {
   }
 
   async findByClassId(id: number) {
-    const lesson = await this.prismaService.lesson.findFirst({where: {groupId: id}});
-    if(lesson)
-      return {data: lesson, status: true};
+    const lesson = await this.prismaService.lesson.findFirst({
+      where: { groupId: id },
+    });
+    if (lesson) return { data: lesson, status: true };
     return {
-      message: "Bunday lesson mavjud emas",
-      status: false
-    }
+      message: 'Bunday lesson mavjud emas',
+      status: false,
+    };
   }
 
   async findOneForLessonMaterial(id: number) {

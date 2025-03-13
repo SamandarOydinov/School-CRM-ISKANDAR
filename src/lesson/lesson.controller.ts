@@ -1,11 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { LessonService } from './lesson.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { UserAuthGuard } from '../guards/user_auth_guard';
 import { UserSelfGuard } from '../guards/user_self_guard';
 import { Roles } from '../decorators/roles.decorator';
-import { RolesGuard } from '../guards/roles_guard';
+import { RolesGuard } from '../guards/user_roles_guard';
 
 @Controller('lesson')
 export class LessonController {
@@ -14,9 +23,9 @@ export class LessonController {
   @UseGuards(UserSelfGuard)
   @UseGuards(UserAuthGuard)
   @UseGuards(RolesGuard)
-  @Roles("TEACHER")
-  @Post("/adLesson/teacherId/:id")
-  create(@Body() createLessonDto: CreateLessonDto, @Param("id") id: number) {
+  @Roles('TEACHER')
+  @Post('/adLesson/teacherId/:id')
+  create(@Body() createLessonDto: CreateLessonDto, @Param('id') id: number) {
     return this.lessonService.create(createLessonDto, id);
   }
 

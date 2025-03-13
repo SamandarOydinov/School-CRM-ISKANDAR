@@ -1,5 +1,9 @@
+import { IsNotEmpty, IsString } from "class-validator";
+
 export class CreateAttendanceDto {
-    status: string
-    lessonId: number
-    pupilId: number
+  @IsString()
+  @IsNotEmpty()
+  status: string; // keldi kelmadi kechikdi
+  lessonId: number;
+  pupilId: number;
 }

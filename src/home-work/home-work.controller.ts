@@ -1,11 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { HomeWorkService } from './home-work.service';
 import { CreateHomeWorkDto } from './dto/create-home-work.dto';
-import { UpdateHomeWorkDto } from './dto/update-home-work.dto';
-import { RolesGuard } from '../guards/roles_guard';
-import { Roles } from '../decorators/roles.decorator';
 import { UserAuthGuard } from '../guards/user_auth_guard';
 import { UserSelfGuard } from '../guards/user_self_guard';
+import { RolesGuard } from '../guards/user_roles_guard';
+import { Roles } from '../decorators/roles.decorator';
+import { UpdateHomeWorkDto } from './dto/update-home-work.dto'
 
 @Controller('home-work')
 export class HomeWorkController {
@@ -25,9 +34,9 @@ export class HomeWorkController {
 
   @UseGuards(RolesGuard)
   @Roles('TEACHER')
-  @Get()
-  findAll() {
-    return this.homeWorkService.findAll();
+  @Get('/allHomeWorks/teacher/:id')
+  findAll(@Param('id') id: number) {
+    return this.homeWorkService.findAll(id);
   }
 
   @UseGuards(UserSelfGuard)
@@ -37,6 +46,8 @@ export class HomeWorkController {
     return this.homeWorkService.findOne(+id);
   }
 
+  @UseGuards(UserSelfGuard)
+  @UseGuards(UserAuthGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -45,6 +56,8 @@ export class HomeWorkController {
     return this.homeWorkService.update(+id, updateHomeWorkDto);
   }
 
+  @UseGuards(RolesGuard)
+  @Roles('TEACHER', 'ADMIN', 'SUPERADMIN')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.homeWorkService.remove(+id);
@@ -52,8 +65,8 @@ export class HomeWorkController {
 
   @UseGuards(UserSelfGuard)
   @UseGuards(UserAuthGuard)
-  @Get("allMyHomeWorks/pupilId/:id")
-  findOneUserById(@Param("id") id: number){
-    return this.homeWorkService.findOneByUserId(+id)
+  @Get('allMyHomeWorks/pupilId/:id')
+  findManyUserById(@Param('id') id: number) {
+    return this.homeWorkService.findManyByUserId(+id);
   }
 }

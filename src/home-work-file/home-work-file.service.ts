@@ -13,7 +13,16 @@ export class HomeWorkFileService {
   }
 
   async findAll() {
-    const homeWorkFiles = await this.prismaService.homeWorkFile.findMany();
+    const homeWorkFiles = await this.prismaService.homeWorkFile.findMany({
+      include: {
+        HomeWork: {
+          select: {
+            end_date: true,
+            homeWorkFile: { select: { File: { select: { url: true } } } },
+          },
+        },
+      },
+    });
     if (homeWorkFiles) {
       return homeWorkFiles;
     } else {

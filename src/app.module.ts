@@ -63,7 +63,7 @@ import { MailModule } from './mail/mail.module';
     AnnouncementModule,
     LessonMaterialModule,
     RolesModule,
-    MailModule
+    MailModule,
   ],
 
   controllers: [AppController],
