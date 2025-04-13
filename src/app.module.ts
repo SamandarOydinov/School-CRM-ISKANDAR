@@ -31,6 +31,7 @@ import { AdminModule } from './admin/admin.module';
 import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
 import { MailModule } from './mail/mail.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { MailModule } from './mail/mail.module';
     LessonMaterialModule,
     RolesModule,
     MailModule,
+    ProductsModule,
   ],
 
   controllers: [AppController],
