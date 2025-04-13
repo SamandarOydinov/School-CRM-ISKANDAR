@@ -1,26 +1,54 @@
 import { Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProductsService {
-  create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product';
+  constructor(private readonly prismaService: PrismaService) {}
+
+  async create(createProductDto: CreateProductDto) {
+    return this.prismaService.products.create({ data: createProductDto });
   }
 
-  findAll() {
-    return `This action returns all products`;
+  async findAll() {
+    const regions = await this.prismaService.products.findMany();
+    if (regions) {
+      return regions;
+    } else {
+      return "Hozircha birorta ham product qo'shilmagan";
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async findOne(id: number) {
+    const product = await this.prismaService.products.findFirst({
+      where: { id },
+    });
+    if (product) {
+      return product;
+    } else {
+      return 'Bunday ID lik product topilmadi';
+    }
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async update(id: number, updateProductDto: UpdateProductDto) {
+    const product = await this.findOne(id);
+    if (product) {
+      return this.prismaService.products.update({
+        data: updateProductDto,
+        where: { id },
+      });
+    } else {
+      return 'Bunday ID lik product topilmadi';
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+  async remove(id: number) {
+    const product = await this.findOne(id);
+    if (product) {
+      return this.prismaService.products.delete({ where: { id } });
+    } else {
+      return 'Bunday ID lik product topilmadi';
+    }
   }
 }
